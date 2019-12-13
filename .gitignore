@@ -1,0 +1,6 @@
+test.py
+*.txt
+*.ssx2
+*.mif
+__pycache__
+.vscode
