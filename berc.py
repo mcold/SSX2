@@ -101,18 +101,7 @@ class Comp:
         except:
             pass
         return var
-    
-    def get_var_list(self, path):
-        """
-            Get variables by path
-        """
-        # TODO: to write
-    
-    def get_list(self, path):
-        """
-           Get variables + groups by path
-        """
-        # TODO: to write
+
 
     def set_var(self, path, value):
         """
@@ -125,34 +114,54 @@ class Comp:
             l_cmd.append("set '/{identifier}{path}' {value}".format(identifier=self.ident,path=path, value=value))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            print(cmd)
+            # print(cmd)
             res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             var = temp.get_var()
         except:
             pass
         return var
     
-    def backup():
+    def backup(self):
         """
             Make .mif-backup of component
         """
         # make dir by identifier + ip -- if not exists
         dir_name = self.ident + '__' + self.ip
         cur_time = definit.get_cur_time()
-        
-
         try:
             l_cmd = list()
             l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
             l_cmd.append("export -s '{comp_name}' {backup_name}.mif".format(comp_name=self.ident, backup_name=self.ident+'_' + cur_time))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            print(cmd)
+            # print(cmd)
             res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             var = temp.get_var()
         except:
             pass
         return var
+    
+    def ls(self, path='/'):
+        """
+            Get content of directory
+        """
+        d = dict()
+        try:
+            l_cmd = list()
+            l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
+            l_cmd.append("ls '/{identifier}{path}'".format(identifier=self.ident,path=path))
+            l_cmd.append('disconnect')
+            cmd =  ";".join(l_cmd)
+            # print(cmd)
+            res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
+            l = temp.get_list()
+            l_gr, l_var = definit.def_dir_var(l)
+            for gr in l_gr:
+                print('gr:  ' + gr)
+            for var in l_var:
+                print('var: ' + var)
+        except:
+            pass
 
 
 class SLR(Comp):
