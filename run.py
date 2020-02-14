@@ -6,7 +6,6 @@
 
 from berc import BercSys, Comp, SLR
 
-# ip = '192.168.6.145'
 ip = '192.168.16.206'
 
 def run():

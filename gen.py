@@ -8,10 +8,6 @@ from fabric.api import task
 import os
 import sys
 
-
-    
-
-
 @task
 def restart_component():
     pass

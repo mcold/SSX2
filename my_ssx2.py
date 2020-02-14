@@ -31,12 +31,11 @@ def get_var(ip, ident, path, login=login, password=password):
     try:
         l_cmd = list()
         l_cmd.append('connect {ip} {login} {password}'.format(ip=ip, login=login, password = password)) 
-        l_cmd.append("varget '/{identifier}{path}'".format(identifier=ident,path=path))
+        l_cmd.append("varget {identifier}{path}".format(identifier=ident,path=path))
         l_cmd.append('disconnect')
         cmd =  ";".join(l_cmd)
-        # print(cmd)
-        res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
-        var = temp.get_var()
+        cmd = 'ssx2 -c "' + cmd + '"'
+        var = temp.get_var(cmd)
     except:
         pass
     return var
@@ -46,7 +45,7 @@ def get_description(ip, ident, login=login, password=password):
     """
         Get description of component
     """
-    desc = get_var(ip, ident, "/About/Description", login, password)
+    desc = get_var(ip, ident, "About/Description", login, password)
     return desc
 
 
@@ -75,7 +74,7 @@ def get_status(ip, ident, login=login, password=password):
         Get status
     """
 
-    status = int(get_var(ip, ident, "/Status & Control/Active'", login, password))
+    status = int(get_var(ip, ident, "/Status & Control/Active", login, password))
     if status == 1:
         return 'Active'
     else:
@@ -91,13 +90,9 @@ def list_components(ip, path='/'):
         Get list of components by ip
     """
     ### TODO: change root & bercut on global variables
-    os.system('ssx2 -c "connect {ip} root bercut;ls {path};disconnect" > {res_file}'.format(ip=ip, path=path, res_file = f_temp))
-    l = temp.get_list()
-    os.remove(f_temp)
+    cmd = 'ssx2 -c "connect {ip} root bercut;ls {path};disconnect"'.format(ip=ip, path=path)
+    l = temp.get_list(cmd)
     return l
 
 if __name__ == "__main__":
-    # get_description('192.168.6.147', '/UPSGenLoadSLR/About/Description')    
-    # print('Description: ' + res)
-    l = list_components('192.168.6.147', '/')
-    print(l)
+    print(get_status('192.168.6.147', '/UPSGenLoadSLR/'))

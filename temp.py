@@ -5,28 +5,21 @@
     Use as buffer with ssx2 results
 """
 
-f_temp = 'temp2.txt'
 import os
 
-def get_list():
+def get_list(cmd):
     """
         Get list of data from temp-file
     """
-    global f_temp
-    with open(f_temp, 'r') as f:
-        l = [x.strip() for x in f.readlines() if x.strip() not in ['']]
-    return l
+    return [x.rstrip() for x in os.popen(cmd).readlines()]
 
-def get_var():
+def get_var(cmd):
     """
         Get variable of data from temp-file
     """
-    global f_temp
-    with open(f_temp, 'r') as f:
-        res = f.readline().strip()
-    os.remove(f_temp)
-    return res
+    return os.popen(cmd).read()
     
 
 if __name__ == "__main__":
-    print(get_var())
+    cmd = r'ECHO %GOPATH%'
+    print(get_var(cmd))

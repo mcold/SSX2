@@ -62,7 +62,6 @@ class Comp:
             l_cmd.append("set '/{identifier}{path}' True".format(identifier=self.ident,path=path))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            print(cmd)
             res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             var = temp.get_var()
         except:
@@ -78,11 +77,7 @@ class Comp:
         l_cmd.append("set '/{identifier}{path}' False".format(identifier=self.ident,path=path))
         l_cmd.append('disconnect')
         cmd =  ";".join(l_cmd)
-        print(cmd)
         res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
-        # var = temp.get_var()
-        # except:
-        #     pass
     
     def get_var(self, path):
         """
@@ -95,7 +90,6 @@ class Comp:
             l_cmd.append("varget '/{identifier}{path}'".format(identifier=self.ident,path=path))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            print(cmd)
             res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             var = temp.get_var()
         except:
@@ -114,7 +108,6 @@ class Comp:
             l_cmd.append("set '/{identifier}{path}' {value}".format(identifier=self.ident,path=path, value=value))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            # print(cmd)
             res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             var = temp.get_var()
         except:
@@ -134,7 +127,6 @@ class Comp:
             l_cmd.append("export -s '{comp_name}' {backup_name}.mif".format(comp_name=self.ident, backup_name=self.ident+'_' + cur_time))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            # print(cmd)
             res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             var = temp.get_var()
         except:
@@ -152,7 +144,6 @@ class Comp:
             l_cmd.append("ls '/{identifier}{path}'".format(identifier=self.ident,path=path))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            # print(cmd)
             res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             l = temp.get_list()
             l_gr, l_var = definit.def_dir_var(l)
