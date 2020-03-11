@@ -12,7 +12,6 @@
 """
 
 import my_ssx2
-from temp import f_temp
 import os
 import temp
 import definit
@@ -90,7 +89,8 @@ class Comp:
             l_cmd.append("varget '/{identifier}{path}'".format(identifier=self.ident,path=path))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
+            cmd = 'ssx2 -c "' + cmd + '"'
+            # res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             var = temp.get_var()
         except:
             pass

@@ -31,14 +31,15 @@ def get_var(ip, ident, path, login=login, password=password):
     try:
         l_cmd = list()
         l_cmd.append('connect {ip} {login} {password}'.format(ip=ip, login=login, password = password)) 
-        l_cmd.append("varget {identifier}{path}".format(identifier=ident,path=path))
+        # l_cmd.append("varget '{identifier}{path}'".format(identifier=ident,path=path))
+        l_cmd.append("varget '{identifier}{path}'".format(identifier=ident,path=path))
         l_cmd.append('disconnect')
         cmd =  ";".join(l_cmd)
         cmd = 'ssx2 -c "' + cmd + '"'
         var = temp.get_var(cmd)
     except:
         pass
-    return var
+    return var.strip()
 
 
 def get_description(ip, ident, login=login, password=password):
@@ -91,8 +92,14 @@ def list_components(ip, path='/'):
     """
     ### TODO: change root & bercut on global variables
     cmd = 'ssx2 -c "connect {ip} root bercut;ls {path};disconnect"'.format(ip=ip, path=path)
+    # os.system('ssx2 -c "connect {ip} root bercut;ls {path};disconnect" > {res_file}'.format(ip=ip, path=path, res_file = f_temp))
     l = temp.get_list(cmd)
+    # os.remove(f_temp)
     return l
 
 if __name__ == "__main__":
-    print(get_status('192.168.6.147', '/UPSGenLoadSLR/'))
+    # res = get_description('192.168.6.147', '/UPSGenLoadSLR/')    
+    # print('Description: ' + res)
+    # l = list_components('192.168.6.147', '/')
+    # print(l)
+    print(get_status('192.168.6.147', '/UPSGenLoadSLR'))
