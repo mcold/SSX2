@@ -1,12 +1,5 @@
 # coding: utf-8
 
-#### TODO: decorator - connect / disconnect
-#### TODO: fix last time of actualization and periodically look to
-#### TODO: write configuration of BERCsys (and read) into file
-#### TODO: backup configuration (.mif and current OOP-structure)
-# /UPS_MA_MP/Status & Control/StopTime 
-#### TODO: if StopTime > at component -> recheck parameters, else don't do anything
-
 """
    Contain components for work with components BERCunica
 """
@@ -16,15 +9,27 @@ import os
 import temp
 import definit
 import time
+from base import *
 
 login = 'root'
 password = 'bercut'
-sep = ': '
+sep_print = ': '
+sep = '/'
+
+class Stend:
+    """
+        Stend connected components
+    """
+    obj_list = []
+
+    def __init__(self, slr_ident):
+        pass
 
 class Comp:
     """
         BERCunica component
     """
+    ls_dir = list()
 
     def __init__(self):
         """
@@ -40,7 +45,11 @@ class Comp:
         self.ident = ident
         self.desc = my_ssx2.get_description(ip, ident)
         self.status = my_ssx2.get_status(ip, ident)
+        self.version = my_ssx2.get_version(ip, ident)
     
+    def __repr__(self):
+        return "{ip} {type} {ident}".format(ip=self.ip, type=self.__type__, ident=self.ident)
+
     def get_type(self):
         return self.__type__
 
@@ -61,8 +70,8 @@ class Comp:
             l_cmd.append("set '/{identifier}{path}' True".format(identifier=self.ident,path=path))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
-            var = temp.get_var()
+            cmd = 'ssx2 -c "' + cmd + '"'
+            var = os.popen(cmd).readline().strip()
         except:
             pass
 
@@ -70,14 +79,17 @@ class Comp:
         """
             Stop component
         """
-        # try:
-        l_cmd = list()
-        l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
-        l_cmd.append("set '/{identifier}{path}' False".format(identifier=self.ident,path=path))
-        l_cmd.append('disconnect')
-        cmd =  ";".join(l_cmd)
-        res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
-    
+        try:
+            l_cmd = list()
+            l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
+            l_cmd.append("set '/{identifier}{path}' False".format(identifier=self.ident,path=path))
+            l_cmd.append('disconnect')
+            cmd =  ";".join(l_cmd)
+            cmd = 'ssx2 -c "' + cmd + '"'
+            var = os.popen(cmd).readline().strip()
+        except:
+            pass
+
     def get_var(self, path):
         """
             Get variable by path
@@ -90,7 +102,6 @@ class Comp:
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
             cmd = 'ssx2 -c "' + cmd + '"'
-            # res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
             var = temp.get_var()
         except:
             pass
@@ -108,8 +119,8 @@ class Comp:
             l_cmd.append("set '/{identifier}{path}' {value}".format(identifier=self.ident,path=path, value=value))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
-            var = temp.get_var()
+            cmd = 'ssx2 -c "' + cmd + '"'
+            res = os.popen(cmd)
         except:
             pass
         return var
@@ -118,42 +129,78 @@ class Comp:
         """
             Make .mif-backup of component
         """
-        # make dir by identifier + ip -- if not exists
         dir_name = self.ident + '__' + self.ip
         cur_time = definit.get_cur_time()
+        make_backup_dir()
         try:
             l_cmd = list()
             l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
-            l_cmd.append("export -s '{comp_name}' {backup_name}.mif".format(comp_name=self.ident, backup_name=self.ident+'_' + cur_time))
+            l_cmd.append("export -s '{comp_name}' {dir}{backup_name}.mif".format(comp_name=self.ident, dir=backup_dir_name + sep, backup_name=self.ident + '_' + cur_time))
             l_cmd.append('disconnect')
             cmd =  ";".join(l_cmd)
-            res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
-            var = temp.get_var()
+            cmd = 'ssx2 -c "' + cmd + '"'
+            os.popen(cmd)
         except:
             pass
-        return var
     
+    def backup_group(self, path):
+        """
+            Make .mif-backup of group
+        """
+        dir_name = self.ident + make_var(path)
+        cur_time = definit.get_cur_time()
+        make_backup_dir()
+        try:
+            l_cmd = list()
+            l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
+            l_cmd.append("export -s '{comp_name}' {dir}{backup_name}.mif".format(comp_name=dir_name, dir=backup_dir_name + sep, backup_name=dir_name.replace(sep, '_') + '_' + cur_time))
+            l_cmd.append('disconnect')
+            cmd =  ";".join(l_cmd)
+            cmd = 'ssx2 -c "' + cmd + '"'
+            os.popen(cmd)
+        except:
+            pass
+
     def ls(self, path='/'):
         """
             Get content of directory
         """
         d = dict()
         try:
-            l_cmd = list()
-            l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
-            l_cmd.append("ls '/{identifier}{path}'".format(identifier=self.ident,path=path))
-            l_cmd.append('disconnect')
-            cmd =  ";".join(l_cmd)
-            res = os.system('ssx2 -c "' + cmd + '"' + '> {res_file}'.format(res_file=f_temp))
-            l = temp.get_list()
-            l_gr, l_var = definit.def_dir_var(l)
-            for gr in l_gr:
-                print('gr:  ' + gr)
-            for var in l_var:
-                print('var: ' + var)
+            path = '/{ident}/{path}'.format(ident=self.ident, path=path.strip('/'))
+            self.ls_dir = [x for x in my_ssx2.list_components(self.ip, path) if x.strip() not in ['', None]]
         except:
             pass
+    
+    def get_var(self, path, login=login, password=password):
+        """
+            Get variable by path
+        """
+        
+        path = unmake_ident(self.ident, path)
+        l_path = [unmake_slash(self.ident)] + [x for x in path.split('/')[:-1] if x.strip() not in ['', None]]
+        prove_path = ""
+        l_elems = list()
+        for sub_path in l_path:
+            if not sub_path.upper() in l_elems and not len(l_elems) == 0: 
+                return None
+            
+            prove_path = '/' + unmake_slash(prove_path + '/' + sub_path)
+            l_elems = [x.upper().strip() for x in my_ssx2.list_components(ip=self.ip, path=prove_path)]
+            if len(l_elems) == 0:
+                return None
+        
+        if not path.split('/')[-1].upper() in [x.split(' ')[0] for x in l_elems]:
+            return None
 
+        l_cmd = list()
+        l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
+        path = unmake_ident(self.ident, path)
+        l_cmd.append("varget '{identifier}{path}'".format(identifier=self.ident,path=make_var(path)))
+        l_cmd.append('disconnect')
+        cmd =  ";".join(l_cmd)
+        cmd = 'ssx2 -c "' + cmd + '"'
+        return os.popen(cmd).readline().strip()
 
 class SLR(Comp):
     """
@@ -162,28 +209,24 @@ class SLR(Comp):
     __type__ = 'SLR'
     profile_type = None
     profile_src = None
+    port = None
     
     def __init__(self, ip, ident):
         Comp.__init__(self, ip, ident)
+        self.get_port()
     
     def get_profile_type(self):
         """
             Get profile type
         """
-        # TODO: why doesn't work???
-        # self.profile_type = self.get_var("/ProfileLoader/Configuration/LoaderType")
         self.profile_type = my_ssx2.get_var(self.ip, self.ident, "/ProfileLoader/Configuration/LoaderType")
 
     def get_profile_source(self):
         self.get_profile_type()
         if self.profile_type == 'XML':
-            # TODO: why doesn't work???
-            # self.profile_src = self.get_var("/ProfileLoader/XML/Configuration/ProfileSources")
             self.profile_src = my_ssx2.get_var(self.ip, self.ident, "/ProfileLoader/XML/Configuration/ProfileSources")
         if self.profile_type == 'DB':
-            # TODO: why doesn't work???
             self.profile_src = self.get_var("/ProfileLoader/DB/Configuration/ConnectionString")
-            # self.profile_src = my_ssx2.get_var(self.ip, self.ident, "/ProfileLoader/DB/Configuration/ConnectionString")
         else:
             pass
     
@@ -193,18 +236,67 @@ class SLR(Comp):
         """
         self.set_var('/Configuration/Log', level)
     
+    def get_connects(self):
+        """
+            Find connected components
+        """
+        pass
+
+    def get_port(self):
+        self.port = my_ssx2.get_var(self.ip, self.ident, "/Security/Users/Agent-Gateway/Port")
+
+
+    def get_webs(self):
+        con_path = make_slash(self.ident + '/Statistics/AG/')
+        l_connects = my_ssx2.list_components(ip=self.ip, path=con_path)
+        l_ips = []
+        l_webs = []
+        for con_name in l_connects:
+            c_path = con_path + con_name + '/' + 'Address'
+            address = self.get_var(path=c_path).split(':')[0]
+            l_ips.append(address)
+        l_ips = list(set(l_ips))
+        l_agents = []
+        for ip in l_ips:
+            h = Host(ip=ip)
+            l_new_agents = h.find(ip=self.ip, port=self.port, type="WEB")
+            l_agents = l_agents + l_new_agents
+        self.agents = l_agents
+        for agent in self.agents:
+            print(agent)
+
+
+    def find_web(self, ip):
+        h = Host(ip=ip)
+        h.find(ip=self.ip, port=self.port, type="WEB")
 
 class Web(Comp):
     """
         Agent
     """
-    __type__ = 'Agent'
+    __type__ = 'WEB'
     def __init__(self, ip, ident):
         Comp.__init__(self, ip, ident)
-    
-    def __init__(self):
-        Comp.__init__(self)
+        self.get_slr_ip()
+        self.get_slr_port()
+        self.get_agent_id()
+        self.get_agent_type()
 
+    def get_slr_ip(self):
+        self.slr_ip = my_ssx2.get_var(self.ip, self.ident, "/Security/Providers/SLR/LBGroup000/FTGroup000/Server000/Configuration/Address")
+    
+    def get_slr_port(self):
+        self.slr_port = my_ssx2.get_var(self.ip, self.ident, "/Security/Providers/SLR/LBGroup000/FTGroup000/Server000/Configuration/Port")
+
+    def get_agent_id(self):
+        self.agent_id = my_ssx2.get_var(self.ip, self.ident, "/Security/Providers/SLR/LBGroup000/FTGroup000/Server000/Configuration/AgentID")
+    
+    def get_agent_type(self):
+        self.agent_type = my_ssx2.get_var(self.ip, self.ident, "/Security/Providers/SLR/LBGroup000/FTGroup000/Server000/Configuration/AgentID")
+
+    def find_slr(self):
+        h = Host(ip=self.slr_ip)
+        h.find(ip=self.slr_ip, port=self.slr_port, type="SLR")
 
 class Agent(Comp):
     """
@@ -213,9 +305,7 @@ class Agent(Comp):
     __type__ = 'Agent'
     def __init__(self, ip, ident):
         Comp.__init__(self, ip, ident)
-    
-    def __init__(self):
-        Comp.__init__(self)
+
 
 class SSM(Comp):
     """
@@ -224,10 +314,6 @@ class SSM(Comp):
     __type__ = 'SSM'
     def __init__(self, ip, ident):
         Comp.__init__(self, ip, ident)
-    
-    def __init__(self):
-        Comp.__init__(self)
-
 
 class SysInfo(Comp):
     """
@@ -251,7 +337,7 @@ class Monitor(Comp):
     def __init__(self):
         Comp.__init__(self)
 
-class BercSys:
+class Host:
     """
         BERCunica system
     """
@@ -264,11 +350,8 @@ class BercSys:
         """
         l = my_ssx2.list_components(ip)
         for comp in l:
-            try:
-                c = Comp(ip, comp)
-                self.comps.append(c)
-            except:
-                pass
+            self.add(ip=ip,ident=comp)
+            
 
     def add(self, comp):
         """
@@ -277,20 +360,23 @@ class BercSys:
         self.comps.append(comp)
     
     def add(self, ip, ident):
-        type = my_ssx2.get_type(ip, ident)
-        if type == 'SLR':
-            b = SLR(ip, ident)
-        if type == 'WEB':
-            b = Web(ip, ident)
-        if type == 'AGENT':
-            b = Agent(ip, ident)
-        if type == 'MONITOR':
-            b = Monitor(ip, ident)
-        if type == 'INFO':
-            b = SysInfo(ip, ident)
-        if type == 'SSM':
-            b = SSM(ip, ident)
-    
+        try:
+            type = my_ssx2.get_type(ip, ident)
+            if type == 'SLR':
+                self.comps.append(SLR(ip, ident))
+            if type == 'WEB':
+                self.comps.append(Web(ip, ident))
+            if type == 'AGENT':
+                self.comps.append(Agent(ip, ident))
+            if type == 'MONITOR':
+                self.comps.append(Monitor(ip, ident))
+            if type == 'INFO':
+                self.comps.append(SysInfo(ip, ident))
+            if type == 'SSM':
+                self.comps.append(SSM(ip, ident))
+        except:
+            pass
+
     def get_comp(self, num):
         """
             Get component by number
@@ -311,7 +397,7 @@ class BercSys:
             Print components status
         """
         for c in self.comps:
-            print(sep.join([c.ident, c.__type__, c.desc, c.status]))
+            print(sep_print.join([c.ident, c.__type__, c.desc, c.status]))
     
     def comp_full(self):
         """
@@ -324,4 +410,17 @@ class BercSys:
             l.append(c.__type__)
             l.append(c.desc)
             l.append(c.status)
-            print(sep.join([l]))
+            print(sep_print.join([l]))
+
+    def find(self, ip, port, type):
+        l = []
+        if type == 'WEB':
+            for comp in self.comps:
+                if comp.__type__ == "WEB":
+                    if comp.slr_ip == ip and comp.slr_port == port:
+                        l.append(comp)
+            return l
+        if type == "SLR":
+            if comp.__type__ == "WEB":
+                if comp.ip == ip and comp.port == port:
+                    pass    

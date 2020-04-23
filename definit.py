@@ -28,7 +28,7 @@ def get_cur_time():
 
 def def_dir_var(l_args):
     """
-        Define if element if directory or variable
+        Define if element is directory or variable
     """
     l_gr = list()
     l_var = list()

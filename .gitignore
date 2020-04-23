@@ -5,3 +5,5 @@ test.py
 *.pyc
 __pycache__
 .vscode
+/MIF
+*test*
