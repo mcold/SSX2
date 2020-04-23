@@ -23,7 +23,9 @@ def run_host():
 
 def run_slr():
     slr = SLR('192.168.16.206', 'UPSSMPServer')
-    slr.backup_group('About')
+    # slr.backup_group('About')
+    slr.get_port()
+    print(slr.port)
 
 def test_get_var():
     res = get_var(ip='192.168.6.145', ident='/UPSTerminalSMP', path='/UPSTerminalSMP/Security/Providers/SLR/LBGroup000/FTGroup000/Server000/Configuration/Address')

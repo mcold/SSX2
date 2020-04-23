@@ -236,12 +236,6 @@ class SLR(Comp):
         """
         self.set_var('/Configuration/Log', level)
     
-    def get_connects(self):
-        """
-            Find connected components
-        """
-        pass
-
     def get_port(self):
         self.port = my_ssx2.get_var(self.ip, self.ident, "/Security/Users/Agent-Gateway/Port")
 
