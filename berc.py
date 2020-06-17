@@ -30,6 +30,9 @@ class Comp:
         BERCunica component
     """
     ls_dir = list()
+    start_time = None
+    stop_time = None
+    status = None
 
     def __init__(self):
         """
@@ -150,27 +153,23 @@ class Comp:
         dir_name = self.ident + make_var(path)
         cur_time = definit.get_cur_time()
         make_backup_dir()
-        try:
-            l_cmd = list()
-            l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
-            l_cmd.append("export -s '{comp_name}' {dir}{backup_name}.mif".format(comp_name=dir_name, dir=backup_dir_name + sep, backup_name=dir_name.replace(sep, '_') + '_' + cur_time))
-            l_cmd.append('disconnect')
-            cmd =  ";".join(l_cmd)
-            cmd = 'ssx2 -c "' + cmd + '"'
-            os.popen(cmd)
-        except:
-            pass
+        
+        l_cmd = list()
+        l_cmd.append('connect {ip} {login} {password}'.format(ip=self.ip, login=login, password = password)) 
+        l_cmd.append("export -s '{comp_name}' {dir}{backup_name}.mif".format(comp_name=dir_name, dir=backup_dir_name + sep, backup_name=dir_name.replace(sep, '_') + '_' + cur_time))
+        l_cmd.append('disconnect')
+        cmd =  ";".join(l_cmd)
+        cmd = 'ssx2 -c "' + cmd + '"'
+        os.popen(cmd)
 
     def ls(self, path='/'):
         """
             Get content of directory
         """
         d = dict()
-        try:
-            path = '/{ident}/{path}'.format(ident=self.ident, path=path.strip('/'))
-            self.ls_dir = [x for x in my_ssx2.list_components(self.ip, path) if x.strip() not in ['', None]]
-        except:
-            pass
+        
+        path = '/{ident}/{path}'.format(ident=self.ident, path=path.strip('/'))
+        self.ls_dir = [x for x in my_ssx2.list_components(self.ip, path) if x.strip() not in ['', None]]
     
     def get_var(self, path, login=login, password=password):
         """
@@ -210,10 +209,12 @@ class SLR(Comp):
     profile_type = None
     profile_src = None
     port = None
+    log = None
     
     def __init__(self, ip, ident):
         Comp.__init__(self, ip, ident)
         self.get_port()
+        self.get_status()
     
     def get_profile_type(self):
         """
@@ -227,18 +228,9 @@ class SLR(Comp):
             self.profile_src = my_ssx2.get_var(self.ip, self.ident, "/ProfileLoader/XML/Configuration/ProfileSources")
         if self.profile_type == 'DB':
             self.profile_src = self.get_var("/ProfileLoader/DB/Configuration/ConnectionString")
-        else:
-            pass
-    
-    def set_log_level(self, level):
-        """
-           Set log level
-        """
-        self.set_var('/Configuration/Log', level)
-    
+        
     def get_port(self):
         self.port = my_ssx2.get_var(self.ip, self.ident, "/Security/Users/Agent-Gateway/Port")
-
 
     def get_webs(self):
         con_path = make_slash(self.ident + '/Statistics/AG/')
@@ -259,10 +251,39 @@ class SLR(Comp):
         for agent in self.agents:
             print(agent)
 
-
     def find_web(self, ip):
         h = Host(ip=ip)
         h.find(ip=self.ip, port=self.port, type="WEB")
+
+    def get_log(self):
+        self.log = my_ssx2.get_var(self.ip, self.ident, "/Configuration/Log")
+
+    def set_log(self, log_number):
+        """
+           Set log level
+        """
+        self.set_var('/Configuration/Log', log_number)
+    
+    def get_start_time(self):
+        self.start_time = my_ssx2.get_var(self.ip, self.ident, "/Status & Control/StartTime")
+    
+    def get_stop_time(self):
+        self.stop_time = my_ssx2.get_var(self.ip, self.ident, "/Status & Control/StopTime")
+
+    def get_pid(self):
+        self.pid = my_ssx2.get_var(self.ip, self.ident, "/Status & Control/PID")
+    
+    def get_status(self):
+        if my_ssx2.get_var(self.ip, self.ident, "/Status & Control/Active")=='1':
+            self.status = 'Active'
+        else:
+            self.status = 'Not active'
+        
+    def exec(self, command):
+        """
+            Execute command
+        """
+        self.set_var('/Status & Control/Console-Command', command)
 
 class Web(Comp):
     """
