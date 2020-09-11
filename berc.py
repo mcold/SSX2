@@ -22,8 +22,38 @@ class Stend:
     """
     obj_list = []
 
-    def __init__(self, slr_ident):
+    def __init__(self):
         pass
+
+    def add(self, obj):
+        """
+            Add object in stend
+        """
+        self.obj_list.append(obj)
+
+    def load(self, name):
+        """
+            Load stend
+        """
+    
+    def restart(self):
+        """
+            Restart stend's components
+        """
+        for comp in self.obj_list: comp.restart()
+        
+    
+    def save(self, name):
+        """
+            Save stend
+        """
+
+    def start(self):
+        for comp in self.obj_list: comp.start()
+
+
+    def stop(self):
+        for comp in self.obj_list: comp.stop()
 
 class Comp:
     """
@@ -34,7 +64,7 @@ class Comp:
     stop_time = None
     status = None
 
-    def __init__(self):
+    def __init__(self, ident):
         """
             Initialize object
         """
@@ -175,7 +205,6 @@ class Comp:
         """
             Get variable by path
         """
-        
         path = unmake_ident(self.ident, path)
         l_path = [unmake_slash(self.ident)] + [x for x in path.split('/')[:-1] if x.strip() not in ['', None]]
         prove_path = ""
@@ -206,10 +235,11 @@ class SLR(Comp):
         SLR
     """
     __type__ = 'SLR'
+    log = None
     profile_type = None
     profile_src = None
     port = None
-    log = None
+    status = None
     
     def __init__(self, ip, ident):
         Comp.__init__(self, ip, ident)
@@ -238,9 +268,12 @@ class SLR(Comp):
         l_ips = []
         l_webs = []
         for con_name in l_connects:
-            c_path = con_path + con_name + '/' + 'Address'
-            address = self.get_var(path=c_path).split(':')[0]
-            l_ips.append(address)
+            try:
+                c_path = con_path + con_name + '/' + 'Address'
+                address = self.get_var(path=c_path).split(':')[0]
+                l_ips.append(address)
+            except AttributeError:
+                pass
         l_ips = list(set(l_ips))
         l_agents = []
         for ip in l_ips:
@@ -263,12 +296,15 @@ class SLR(Comp):
            Set log level
         """
         self.set_var('/Configuration/Log', log_number)
+        self.log = log_number
     
     def get_start_time(self):
         self.start_time = my_ssx2.get_var(self.ip, self.ident, "/Status & Control/StartTime")
+        print('START TIME: ' + str(self.start_time))
     
     def get_stop_time(self):
         self.stop_time = my_ssx2.get_var(self.ip, self.ident, "/Status & Control/StopTime")
+        print('STOP TIME: ' + str(self.stop_time))
 
     def get_pid(self):
         self.pid = my_ssx2.get_var(self.ip, self.ident, "/Status & Control/PID")
@@ -284,6 +320,14 @@ class SLR(Comp):
             Execute command
         """
         self.set_var('/Status & Control/Console-Command', command)
+
+    def restart(self):
+        """
+            Restart server
+        """
+        self.set_log(3)
+        super().restart()
+        self.set_log(6)
 
 class Web(Comp):
     """
@@ -438,4 +482,4 @@ class Host:
         if type == "SLR":
             if comp.__type__ == "WEB":
                 if comp.ip == ip and comp.port == port:
-                    pass    
+                    pass
