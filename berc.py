@@ -9,12 +9,15 @@ import os
 import temp
 import definit
 import time
+import json
 from base import *
+
 
 login = 'root'
 password = 'bercut'
 sep_print = ': '
 sep = '/'
+stend_dir = 'STEND'
 
 class Stend:
     """
@@ -24,6 +27,9 @@ class Stend:
 
     def __init__(self):
         pass
+
+    def __str__(self):
+        return "\n".join([x.ip + '(' + x.__type__ + '): ' + x.ident for x in self.obj_list])
 
     def add(self, obj):
         """
@@ -35,7 +41,17 @@ class Stend:
         """
             Load stend
         """
-    
+        d = dict()
+        with open('{0}/{1}.json'.format(stend_dir, name), 'r') as f:
+            d = json.load(f)
+        for k,v in d.items():
+            if v['type'] == 'SLR':
+                x = SLR(v['ip'], k)
+                self.obj_list.append(x)
+            if v['type'] == 'WEB':
+                x = Web(v['ip'], k)
+                self.obj_list.append(x)
+
     def restart(self):
         """
             Restart stend's components
@@ -47,6 +63,12 @@ class Stend:
         """
             Save stend
         """
+        definit.make_dir(stend_dir)
+        d = dict()
+        for comp in self.obj_list:
+            d[comp.ident] = {'ip': comp.ip, 'type': comp.__type__}
+        with open('{0}/{1}.json'.format(stend_dir, name), 'w') as f:
+            json.dump(d, f)
 
     def start(self):
         for comp in self.obj_list: comp.start()
@@ -59,10 +81,12 @@ class Comp:
     """
         BERCunica component
     """
+    __type__ = None
     ls_dir = list()
     start_time = None
     stop_time = None
     status = None
+    ip = None
 
     def __init__(self, ident):
         """

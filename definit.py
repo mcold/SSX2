@@ -13,10 +13,7 @@ def make_dir(dir_name):
     """
         Make directory
     """
-    try:
-        os.mkdir(dir_name)
-    except:
-        pass
+    if not os.path.exists(dir_name): os.mkdir(dir_name)
 
 def get_cur_time():
     """
@@ -42,5 +39,4 @@ def def_dir_var(l_args):
 
 
 if __name__ == "__main__":
-    # test()
     pass
